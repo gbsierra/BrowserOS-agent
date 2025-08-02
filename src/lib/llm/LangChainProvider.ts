@@ -28,6 +28,7 @@ const DEFAULT_NXTSCAPE_PROXY_URL = "http://llm.nxtscape.ai"
 const DEFAULT_NXTSCAPE_MODEL = "claude-3-5-sonnet"
 const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash"
 const DEFAULT_LMSTUDIO_BASE_URL = "http://localhost:1234/v1";
+const DEFAULT_OPENROUTER_MODEL = "openrouter/horizon-beta"
 const DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 // Simple cache for LLM instances
@@ -174,7 +175,7 @@ export class LangChainProvider {
       case "openrouter":
         return {
           provider: "openrouter",
-          model: settings.openrouter?.model ?? "openrouter/mistral",
+          model: settings.openrouter?.model ?? DEFAULT_OPENROUTER_MODEL,
           temperature: options?.temperature ?? DEFAULT_TEMPERATURE,
           maxTokens: options?.maxTokens,
           streaming: DEFAULT_STREAMING,
