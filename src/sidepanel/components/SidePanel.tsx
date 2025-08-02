@@ -511,25 +511,28 @@ export function SidePanel({
 
   // Dynamic examplesGrid
   useEffect(() => {
+    let enterTimeout: NodeJS.Timeout;
+    let resetTimeout: NodeJS.Timeout;
+
     const interval = setInterval(() => {
       // Animate bottom card out
       setActiveCardState('exit');
 
       // After exit completes, inject new example at top
-      const enterTimeout = setTimeout(() => {
+      enterTimeout = setTimeout(() => {
         const newExample = getRandomExample(1)[0];
         setVisibleExamples((prev) => [newExample, ...prev.slice(0, 2)]);
         setActiveCardState('enter');
       }, 800);
 
       // Reset animation state after full cycle
-      const resetTimeout = setTimeout(() => {
+      resetTimeout = setTimeout(() => {
         setActiveCardState('idle');
       }, 1600);
 
       return () => {
-        clearTimeout(enterTimeout);
-        clearTimeout(resetTimeout);
+        if(enterTimeout) clearTimeout(enterTimeout);
+        if(resetTimeout) clearTimeout(resetTimeout);
       };
     }, 10000);
 
