@@ -122,10 +122,11 @@ const EXAMPLE_PROMPTS = [
   "Save all tabs from Facebook into a reading list",
 
   // Content Analysis & Understanding
-  "Summarize this article for me",
+  "Summarize the chapter of this book for me",
   "What are the key points on this page?",
   "Check if this article is AI-generated",
   "Extract all links and sources from this page",
+  "Identify bias in this report",
 ];
 
 // Browser task examples for agent mode
@@ -136,6 +137,7 @@ const BROWSER_TASK_EXAMPLES = [
   "Extract all news headlines from this page",
   "Find the cheapest flight to San Francisco",
   "Search YouTube for videos explaining BrowserOS",
+  "Compare return polciies of Walmart and Best Buy",
 ];
 
 // Combine all examples - prioritizing agent tasks first
@@ -146,19 +148,31 @@ const ALL_EXAMPLES = [
   ...EXAMPLE_PROMPTS
 ];
 
-let shuffledPool = [...ALL_EXAMPLES].sort(() => 0.5 - Math.random());
-// Function to get random examples
+// Initialize a single shuffled list once
+const SHUFFLED_EXAMPLES = [...ALL_EXAMPLES].sort(() => 0.5 - Math.random());
+
+// Function to get examples from the fixed shuffled list
 const getRandomExample = (count: number = 1): string[] => {
-  const result: string[] = [];
+  // Ensure count is valid
+  if (count < 1) return [];
+  if (count > ALL_EXAMPLES.length) count = ALL_EXAMPLES.length;
 
-  while (result.length < count) {
-    // If exhausted, reshuffle
-    if (shuffledPool.length === 0) {
-      shuffledPool = [...ALL_EXAMPLES].sort(() => 0.5 - Math.random());
-    }
-
-    result.push(shuffledPool.pop()!);
+  // Use a static index to track the next starting point
+  if (!(getRandomExample as any).index) {
+    (getRandomExample as any).index = 0;
   }
+
+  const result: string[] = [];
+  let index = (getRandomExample as any).index;
+
+  // Collect 'count' number of examples starting from the current index
+  while (result.length < count) {
+    result.push(SHUFFLED_EXAMPLES[index % SHUFFLED_EXAMPLES.length]);
+    index++;
+  }
+
+  // Update the index for the next call
+  (getRandomExample as any).index = index % SHUFFLED_EXAMPLES.length;
 
   return result;
 };
