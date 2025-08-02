@@ -679,7 +679,8 @@ export function SidePanel({
 
   return (
     <div className={cn(styles.container, className)}>
-      {/* Help Modal - using new HelpSection component */}
+
+      {/* Help Modal */}
       <HelpSection 
         isOpen={state.showHelp}
         onClose={toggleHelp}
@@ -727,14 +728,7 @@ export function SidePanel({
             <HelpIcon />
           </button>
 
-          {/* Tab selector button */}
-          <button
-            onClick={toggleTabSelector}
-            className={styles.actionButton}
-            title="Select tabs"
-          >
-            <TabsIcon />
-          </button>
+          
         </div>
       </div>
 
@@ -863,30 +857,45 @@ export function SidePanel({
         )}
       </div>
 
-      {/* Input section - always at bottom */}
+      {/* Input section */}
       <div className={styles.inputSection}>
-        
-        {/* Selected tabs display */}
-        {selectedTabsData.length > 0 && (
-          <div className={styles.selectedTabsContainer}>
-            {selectedTabsData.map((tab) => (
-              <div key={tab.id} className={styles.selectedTabPill}>
-                {tab.favIconUrl && (
-                  <img src={tab.favIconUrl} alt="" className={styles.tabIconSmall} />
-                )}
-                <span className={styles.selectedTabTitle}>{tab.title}</span>
-                <button
-                  type="button"
-                  className={styles.removeTabBtn}
-                  onClick={() => removeSelectedTab(tab.id)}
-                  aria-label="Remove tab"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', overflowX: 'auto'}}>
+          
+          {/* Select Tabs button */}
+          <button
+            onClick={toggleTabSelector}
+            className={styles.actionButton}
+            title="Select tabs"
+          >
+            <TabsIcon />
+          </button>
+
+          {/* Selected tabs display */}
+          {selectedTabsData.length > 0 && (
+            <div
+              className={styles.selectedTabsContainer}
+            >
+              {selectedTabsData.map((tab) => (
+                <div key={tab.id} className={styles.selectedTabPill}>
+                  {tab.favIconUrl && (
+                    <img src={tab.favIconUrl} alt="" className={styles.tabIconSmall} />
+                  )}
+                  <span className={styles.selectedTabTitle}>{tab.title}</span>
+                  <button
+                    type="button"
+                    className={styles.removeTabBtn}
+                    onClick={() => removeSelectedTab(tab.id)}
+                    aria-label="Remove tab"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
 
         {/* Tab selector - positioned above input when active */}
         {state.showTabSelector && (
@@ -906,7 +915,8 @@ export function SidePanel({
             />
           </div>
         )}
-        
+
+        {/* Text Input */}
         <form onSubmit={handleSubmit} className={styles.inputForm}>
           
           <div className={styles.inputWrapper}>
@@ -948,6 +958,7 @@ export function SidePanel({
             }
           </div>
         </form>
+
       </div>
     </div>
   );
