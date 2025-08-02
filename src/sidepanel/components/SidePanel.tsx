@@ -123,10 +123,10 @@ const EXAMPLE_PROMPTS = [
 
   // Content Analysis & Understanding
   "Summarize the chapter of this book for me",
-  "What are the key points on this page?",
+  "What are the key points of this report?",
   "Check if this article is AI-generated",
   "Extract all links and sources from this page",
-  "Identify bias in this report",
+  "Identify bias in this publication",
 ];
 
 // Browser task examples for agent mode
@@ -134,10 +134,10 @@ const BROWSER_TASK_EXAMPLES = [
   "Open amazon.com and order sensodyne toothpaste",
   "Write a tweet saying Hello World",
   "Find top rated headphones under 100$",
-  "Extract all news headlines from this page",
+  "Extract all news headlines from this site",
   "Find the cheapest flight to San Francisco",
   "Search YouTube for videos explaining BrowserOS",
-  "Compare return polciies of Walmart and Best Buy",
+  "Compare return policies of Walmart and Best Buy",
 ];
 
 // Combine all examples - prioritizing agent tasks first
