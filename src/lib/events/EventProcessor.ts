@@ -173,6 +173,31 @@ export class EventProcessor {
         icon: '🌐',
         description: (args) => args?.url ? `Navigating to ${args.url}` : 'Navigating to page'
       },
+      'find_element_tool': {
+        name: 'Element Finder',
+        icon: '🧭',
+        description: (args) => args?.selector ? `Finding element ${args.selector}` : 'Finding element'
+      },
+      'interaction_tool': {
+        name: 'Element Interaction',
+        icon: '🖱️',
+        description: (args) => args?.action ? `Performing ${args.action}` : 'Interacting with element'
+      },
+      'scroll_tool': {
+        name: 'Scroll',
+        icon: '🌀',
+        description: (args) => args?.direction ? `Scrolling ${args.direction}` : 'Scrolling page'
+      },
+      'search_tool': {
+        name: 'Search',
+        icon: '🔎',
+        description: (args) => args?.query ? `Searching for "${args.query}"` : 'Performing search'
+      },
+      'refresh_browser_state': {
+        name: 'Refresh State',
+        icon: '♻️',
+        description: () => 'Refreshing browser state'
+      },
       'tab_operations_tool': {
         name: 'Tab Operations',
         icon: '📑',
@@ -184,6 +209,16 @@ export class EventProcessor {
           if (args?.action === 'close') return 'Closing tabs';
           return args?.action || 'Managing tabs';
         }
+      },
+      'screenshot_tool': {
+        name: 'Screenshot',
+        icon: '📸',
+        description: () => 'Capturing screenshot'
+      },
+      'extract_tool': {
+        name: 'Content Extraction',
+        icon: '📤',
+        description: (args) => args?.target ? `Extracting data from ${args.target}` : 'Extracting content'
       },
       'done_tool': {
         name: 'Completion',

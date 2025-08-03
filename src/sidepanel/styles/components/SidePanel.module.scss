@@ -22,9 +22,9 @@
   justify-content: space-between;
   align-items: center;
   padding: $spacing-md $spacing-lg;
-  height: 56px; // Fixed height for consistency
+  height: 50px; // Fixed height for consistency
   background-color: $nxtscape-bg-primary;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
 }
 
 .headerLeft {
@@ -56,7 +56,6 @@
   color: $nxtscape-text-muted;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-bottom: 6px;
   display: flex;
   
   &:hover {
@@ -652,7 +651,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin-bottom: 7px;
   padding: 10px;
   background: var(--surface-primary);
   border: 1px solid var(--border-color);

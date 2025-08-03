@@ -99,12 +99,12 @@ export class BrowserAgent {
   // Tools that trigger glow animation when executed
   private static readonly GLOW_ENABLED_TOOLS = new Set([
     'navigation_tool',
-    'find_element',
-    'interact',
+    'find_element_tool',
+    'interaction_tool',
     'scroll_tool',
     'search_tool',
     'refresh_browser_state',
-    'tab_operations',
+    'tab_operations_tool',
     'screenshot_tool',
     'extract_tool'
   ]);

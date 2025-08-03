@@ -119,16 +119,15 @@ $message-bg-light: #F4F4F5; // Light theme message background
   gap: $spacing-sm;
 }
 
-.toolHeader {
+.toolMeta {
   display: flex;
   gap: $spacing-sm;
-  align-items: center;
 }
 
 .toolName {
-  font-weight: 600;
+  font-weight: 365;
   color: var(--success) !important;
-  font-size: 0.875rem;
+  font-size: 0.61rem;
 }
 
 .toolArgs {

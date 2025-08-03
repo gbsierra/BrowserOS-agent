@@ -863,7 +863,7 @@ export function SidePanel({
       {/* Input section */}
       <div className={styles.inputSection}>
 
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', overflowX: 'auto'}}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', overflowX: 'auto', marginBottom: '6px'}}>
           
           {/* Select Tabs button */}
           <button
