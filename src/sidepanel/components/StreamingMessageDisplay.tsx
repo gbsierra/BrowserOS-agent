@@ -5,7 +5,7 @@ import { cn } from '@/sidepanel/lib/utils'
 import { MarkdownContent } from './MarkdownContent'
 
 // Message type schema 
-const MessageTypeSchema = z.enum(['user', 'system', 'llm', 'tool', 'error', 'streaming-llm', 'streaming-tool', 'thinking'])
+const MessageTypeSchema = z.enum(['user', 'system', 'llm', 'tool', 'error', 'streaming-llm', 'streaming-tool', 'thinking', 'paused'])
 export type MessageType = z.infer<typeof MessageTypeSchema>
 
 // Message schema
@@ -88,6 +88,8 @@ function MessageItem({
       case 'streaming-llm':
         return '💭'
       case 'tool':
+      case 'paused':
+        return '✋'
       case 'streaming-tool':
         return '🛠️'
       case 'error':

@@ -689,9 +689,12 @@ export function SidePanel({
       {/* Header with branding and action buttons */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.brandTitle}>
-            Your browser assistant
-          </h1>
+          <a href="https://www.browseros.com/" target="_blank" rel="noopener noreferrer">
+            <img
+              src="../../../assets/product_logo_name_22_white.png"
+              alt="Your browser assistant"
+            />
+          </a>
         </div>
         
         <div className={styles.headerActions}>
