@@ -495,7 +495,7 @@ export class BrowserAgent {
       this.eventEmitter.debug('Executing tool: ' + toolName + ' result: ' + displayMessage);
       
       // Emit tool result for UI display (always shown)
-      this.eventEmitter.emitToolResult(toolName, result);
+      this.eventEmitter.emitToolResult(toolName, displayMessage);
 
       // Add the result back to the message history for context
       // add toolMessage before systemReminders as openAI expects each 

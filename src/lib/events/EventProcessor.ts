@@ -224,6 +224,21 @@ export class EventProcessor {
         name: 'Completion',
         icon: '✅',
         description: () => 'Marking task as complete'
+      },
+      'group_tabs_tool': {
+        name: 'Group Tabs',
+        icon: '✅',
+        description: () => 'Grouping tabs'
+      },
+      'get_selected_tabs_tool': {
+        name: 'Get Selected Tabs',
+        icon: '✅',
+        description: () => 'Gettings selected tabs'
+      },
+      'todo_manager': {
+        name: 'To Do Manager',
+        icon: '✅',
+        description: () => 'Gettings todo list'
       }
     };
 
