@@ -123,7 +123,7 @@ describe('LangChainProvider', () => {
         openrouter: {
           model: 'openrouter/horizon-beta',
           temperature: 0.6,
-          apiKey: process.env.OPENROUTER_API_KEY,
+          apiKey: 'TBD',
           baseURL: 'https://openrouter.ai/api/v1'
         }
       };

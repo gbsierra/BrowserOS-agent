@@ -179,7 +179,7 @@ export class LangChainProvider {
           temperature: options?.temperature ?? DEFAULT_TEMPERATURE,
           maxTokens: options?.maxTokens,
           streaming: DEFAULT_STREAMING,
-          apiKey: process.env.OPENROUTER_API_KEY ?? settings.openrouter?.apiKey,
+          apiKey: settings.openrouter?.apiKey,
           baseURL: settings.openrouter?.baseUrl ?? DEFAULT_OPENROUTER_BASE_URL,
         }
 

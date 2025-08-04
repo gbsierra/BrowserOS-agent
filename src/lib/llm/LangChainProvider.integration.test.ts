@@ -2,7 +2,6 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { LangChainProvider, getLLM } from './LangChainProvider'
 import { z } from 'zod'
 import { SystemMessage, HumanMessage } from '@langchain/core/messages'
-import 'dotenv/config'; // loads .env
 
 /**
  * Integration tests for LangChainProvider
@@ -216,10 +215,10 @@ describe('LangChainProvider Integration Test', () => {
         temperature: 0.7,
         streaming: true,
         maxTokens: 50,
-        apiKey: process.env.OPENROUTER_API_KEY || 'nokey',
+        apiKey: 'TBD',
         baseURL: 'https://openrouter.ai/api/v1'
       };
-      console.log('[DEBUG] process.env.OPENROUTER_API_KEY =', process.env.OPENROUTER_API_KEY);
+      console.log('[DEBUG] OPENROUTER_API_KEY =', 'TBD');
 
       const llm = provider.createLLMFromConfig(config);
       const response = await llm.invoke('Say "Hello from OpenRouter!"');
