@@ -23,7 +23,8 @@ export enum MessageType {
   GET_TAB_HISTORY = 'GET_TAB_HISTORY',
   INTENT_PREDICTION_UPDATED = 'INTENT_PREDICTION_UPDATED',
   INTENT_BUBBLES_SHOW = 'INTENT_BUBBLES_SHOW',
-  INTENT_BUBBLE_CLICKED = 'INTENT_BUBBLE_CLICKED'
+  INTENT_BUBBLE_CLICKED = 'INTENT_BUBBLE_CLICKED',
+  SYSTEM = 'SYSTEM'
 }
 
 // Create a zod enum for MessageType
@@ -306,6 +307,21 @@ export const IntentBubbleClickedMessageSchema = MessageSchema.extend({
 export type IntentBubbleClickedMessage = z.infer<typeof IntentBubbleClickedMessageSchema>
 
 /**
+ * System message schema
+ */
+export const SystemMessageSchema = MessageSchema.extend({
+  type: z.literal(MessageType.SYSTEM),
+  payload: z.object({
+    content: z.string(),  // System message content
+    level: z.enum(['info', 'warning', 'error', 'success']).optional().default('info'),  // Message level
+    source: z.string().optional(),  // Source of the system message
+    timestamp: z.string().optional()  // Optional timestamp
+  })
+})
+
+export type SystemMessage = z.infer<typeof SystemMessageSchema>
+
+/**
  * Union of all message types
  */
 export const ExtensionMessageSchema = z.discriminatedUnion('type', [
@@ -327,7 +343,8 @@ export const ExtensionMessageSchema = z.discriminatedUnion('type', [
   GetTabHistoryMessageSchema,
   IntentPredictionUpdatedMessageSchema,
   IntentBubblesShowMessageSchema,
-  IntentBubbleClickedMessageSchema
+  IntentBubbleClickedMessageSchema,
+  SystemMessageSchema
 ])
 
 export type ExtensionMessage = z.infer<typeof ExtensionMessageSchema>
