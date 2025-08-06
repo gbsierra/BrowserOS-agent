@@ -18,11 +18,11 @@ export function generateResultSystemPrompt(): string {
 
 ## Success Example:
 Task: "Find the current temperature in Tokyo"
-Message: "## ✓ Task Completed\n\n**Current temperature in Tokyo: 22°C (72°F)**\n\nWeather: Partly cloudy with light winds"
+Message: "## Task Summary:\n\n**Current temperature in Tokyo: 22°C (72°F)**\n\nWeather: Partly cloudy with light winds"
 
 ## Failure Example:
 Task: "Book a flight to Paris"  
-Message: "## ✗ Task Failed\n\nUnable to complete the booking process. The payment page failed to load after multiple attempts.\n\n**Suggestion:** Try again with a different browser or contact the airline directly."`;
+Message: "## Task Failed\n\nUnable to complete the booking process. The payment page failed to load after multiple attempts.\n\n**Suggestion:** Try again with a different browser or contact the airline directly."`;
 }
 
 export function generateResultTaskPrompt(
