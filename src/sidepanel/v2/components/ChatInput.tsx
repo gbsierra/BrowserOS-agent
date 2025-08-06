@@ -179,7 +179,7 @@ export function ChatInput({ isConnected, isProcessing, onToggleSelectTabs, showS
   }
   
   return (
-    <div className="relative bg-gradient-to-t from-background via-background to-background/95 p-6 flex-shrink-0 overflow-hidden">
+    <div className="relative bg-gradient-to-t from-background via-background to-background/95 p-2 flex-shrink-0 overflow-hidden">
       
       {/* Spotlight effect from bottom of page */}
       <div className="absolute top-20 left-0 w-full h-40">
@@ -200,22 +200,22 @@ export function ChatInput({ isConnected, isProcessing, onToggleSelectTabs, showS
       {/* Input container */}
       <div className="relative">
         {/* Toggle Select Tabs Button */}
-        <div className="flex justify-center mb-2">
+        {/* <div className="flex justify-center mb-2">
           <Button
             type="button"
             onClick={onToggleSelectTabs}
             size="sm"
             variant="ghost"
-            className="h-8 px-3 rounded-lg bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-200 text-xs"
+            className="h-6 px-3 rounded-lg bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-200 text-xs"
             aria-label={showSelectTabsButton ? 'Hide tab selector' : 'Show tab selector'}
           >
             <TabsIcon />
             {showSelectTabsButton ? 'Hide Tabs' : 'Show Tabs'}
           </Button>
-        </div>
+        </div> */}
         
-        <form onSubmit={handleSubmit} className="w-full" role="form" aria-label="Chat input form">
-          <div className="relative flex items-end">
+        <form onSubmit={handleSubmit} className="w-full flex justify-center" role="form" aria-label="Chat input form">
+          <div className="relative flex items-end w-full max-w-sm">
             <Textarea
               ref={textareaRef}
               value={input}
@@ -223,7 +223,7 @@ export function ChatInput({ isConnected, isProcessing, onToggleSelectTabs, showS
               placeholder={getPlaceholder()}
               disabled={!isConnected}
               className={cn(
-                'max-h-[200px] resize-none pr-20 text-sm',
+                'max-h-[200px] resize-none pr-20 text-sm w-full',
                 'transition-all duration-300',
                 'bg-background/80 backdrop-blur-sm border-2 border-brand/30',
                 'focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:border-brand',
