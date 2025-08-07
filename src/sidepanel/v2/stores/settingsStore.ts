@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 // Settings schema
 const SettingsSchema = z.object({
-  fontSize: z.number().min(12).max(24).default(14),  // Font size in pixels
+  fontSize: z.number().min(13).max(21).default(14),  // Font size in pixels
   isDarkMode: z.boolean().default(false)  // Dark mode setting
 })
 

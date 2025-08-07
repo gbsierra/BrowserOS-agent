@@ -92,7 +92,7 @@ export const Header = memo(function Header({ onReset, showReset, isProcessing }:
                 <img
                   src={isDarkMode ? "/assets/product_logo_name_22_white.png" : "/assets/product_logo_name_22_2x.png"}
                   alt="BrowserOS"
-                  className="h-6"
+                  style={{ height: '24px', width: 'auto' }}
                 />
               </div>
             </div>

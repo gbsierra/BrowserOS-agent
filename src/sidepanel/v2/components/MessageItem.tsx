@@ -454,8 +454,8 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
           messageStyling.shadow,
           isUser ? 'group-hover:scale-[1.02]' : '',
           messageStyling.bubble,
-          // Add subtle styling for indented messages
-          shouldIndent && 'opacity-90'
+          // Add subtle grey text styling for indented messages
+          shouldIndent && 'opacity-70 text-muted-foreground/70'
         )}>
           {/* Glow effect */}
           <div className={cn(
@@ -488,7 +488,7 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
           'mr-4 mt-1 max-w-[85%]',
           isCompleting && 'animate-dash-off-left',
           // Add subtle styling for indented messages
-          shouldIndent && 'opacity-90'
+          shouldIndent && 'opacity-70'
         )}>
           {isExecuting ? (
             <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
@@ -496,7 +496,10 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
               <span>{executingText}</span>
             </div>
           ) : (
-            <div className="text-sm text-foreground">
+            <div className={cn(
+              'text-sm',
+              shouldIndent ? 'text-muted-foreground/70' : 'text-foreground'
+            )}>
               {renderContent()}
             </div>
           )}

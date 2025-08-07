@@ -117,8 +117,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
               <Slider
                 value={fontSize}
-                min={12}
-                max={24}
+                min={13}
+                max={21}
                 step={1}
                 onChange={setFontSize}
                 aria-label="Font size"
