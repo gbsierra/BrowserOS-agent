@@ -96,6 +96,12 @@ export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault()
     
+    // If processing and no input, act like pause button (cancel current task)
+    if (isProcessing && !input.trim()) {
+      handleCancel()
+      return
+    }
+
     if (isProcessing && input.trim()) {
       // Interrupt and follow-up pattern
       const followUpQuery = input.trim()
@@ -121,7 +127,7 @@ export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
       reason: 'User requested cancellation',
       source: 'sidepanel'
     })
-    setProcessing(false)
+    // Do not change local processing state here; wait for background WORKFLOW_STATUS
   }
   
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

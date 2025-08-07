@@ -235,17 +235,26 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
       case 'planner_tool':
       case 'navigation_tool':
       case 'tab_operations':
+      case 'tab_operations_tool':
       case 'refresh_browser_state':
+      case 'refresh_browser_state_tool':
       case 'find_element':
+      case 'find_element_tool':
       case 'interact':
+      case 'interact_tool':
       case 'scroll':
+      case 'scroll_tool':
       case 'search':
+      case 'search_tool':
       case 'group_tabs':
+      case 'group_tabs_tool':
       case 'get_selected_tabs':
+      case 'get_selected_tabs_tool':
       case 'extract_tool':
       case 'screenshot_tool':
       case 'done_tool':
       case 'todo_manager':
+      case 'todo_manager_tool':
       case 'validator_tool':
         return 'tool-result'
       case 'result_tool':
@@ -432,6 +441,9 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
     }
   }, [contentRenderer, message.content, message.id])
   
+  // Startup status lines metadata flag
+  const isStartup = !!message.metadata && (message.metadata as any).isStartup === true
+
   return (
     <div 
       data-message-id={message.id}
@@ -516,7 +528,9 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
           ) : (
             <div className={cn(
               'text-sm',
-              shouldIndent ? 'text-muted-foreground/70' : 'text-foreground'
+              isStartup
+                ? 'text-muted-foreground'
+                : (shouldIndent ? 'text-muted-foreground/70' : 'text-foreground')
             )}>
               {renderContent()}
             </div>

@@ -35,6 +35,7 @@ export function useMessageHandler() {
         if (details.content) {
           const isExecuting = details.content.includes('executing') || details.content.includes('Executing')
           const isTodoTable = details.content.includes('| # | Status | Task |')
+          const category = details.data?.category as string | undefined
           
           // Mark existing executing messages as completing
           if (!isExecuting) {
@@ -63,7 +64,7 @@ export function useMessageHandler() {
             addMessage({
               role: 'system',
               content: details.content,
-              metadata: isExecuting ? { isExecuting: true } : undefined
+              metadata: isExecuting ? { isExecuting: true } : (category ? { isStartup: category === 'startup' } : undefined)
             })
             
             // If this is an executing message, mark it as executing

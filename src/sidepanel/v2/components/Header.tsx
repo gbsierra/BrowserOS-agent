@@ -2,7 +2,6 @@ import React, { memo, useState } from 'react'
 import { Button } from '@/sidepanel/components/ui/button'
 import { useSidePanelPortMessaging } from '@/sidepanel/hooks'
 import { MessageType } from '@/lib/types/messaging'
-import { useChatStore } from '../stores/chatStore'
 import { useAnalytics } from '../hooks/useAnalytics'
 import { SettingsModal } from './SettingsModal'
 import { HelpSection } from './HelpSection'
@@ -23,7 +22,6 @@ interface HeaderProps {
  */
 export const Header = memo(function Header({ onReset, showReset, isProcessing }: HeaderProps) {
   const { sendMessage, connected } = useSidePanelPortMessaging()
-  const { setProcessing } = useChatStore()
   const { trackClick } = useAnalytics()
   const [showSettings, setShowSettings] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
@@ -35,7 +33,6 @@ export const Header = memo(function Header({ onReset, showReset, isProcessing }:
       reason: 'User clicked pause button',
       source: 'sidepanel'
     })
-    setProcessing(false)
   }
   
   const handleReset = () => {
