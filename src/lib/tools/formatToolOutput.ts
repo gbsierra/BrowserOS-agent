@@ -63,6 +63,22 @@ export function formatToolOutput(toolName: string, result: ToolResult): string {
       return `Task validation: ${status}`;
     }
 
+    case 'todo_manager_tool': {
+      // Handle different todo manager actions
+      if (output && typeof output === 'object') {
+        // For get_next action, show just the content
+        if (output.id && output.content && output.status) {
+          return output.content;
+        }
+        // For other actions, show the result message
+        if (typeof output === 'string') {
+          return output;
+        }
+      }
+      // Fallback to JSON for unknown formats
+      return JSON.stringify(output);
+    }
+
     case 'navigation_tool': {
       // Output: { url: string, success: boolean } or similar
       const navUrl = output.url || 'Unknown URL';

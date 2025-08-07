@@ -15,9 +15,20 @@ interface MessageItemProps {
 // Helper function to detect and parse JSON content
 const parseJsonContent = (content: string) => {
   try {
+    let trimmedContent = content.trim()
+    
+    // Handle quoted JSON strings (e.g., "[{...}]" or '{"key": "value"}')
+    if ((trimmedContent.startsWith('"') && trimmedContent.endsWith('"')) ||
+        (trimmedContent.startsWith("'") && trimmedContent.endsWith("'"))) {
+      // Remove the outer quotes and try to parse the inner JSON
+      trimmedContent = trimmedContent.slice(1, -1)
+      // Handle escaped quotes
+      trimmedContent = trimmedContent.replace(/\\"/g, '"')
+    }
+    
     // Check if content looks like JSON (starts with [ or {)
-    if (content.trim().startsWith('[') || content.trim().startsWith('{')) {
-      const parsed = JSON.parse(content)
+    if (trimmedContent.startsWith('[') || trimmedContent.startsWith('{')) {
+      const parsed = JSON.parse(trimmedContent)
       return parsed
     }
     return null
@@ -163,12 +174,12 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
   const isUser = message.role === 'user'
   const isError = message.metadata?.error || message.content.includes('## Task Failed')
   const isSystem = message.role === 'system'
+  const { markMessageAsCompleting, removeExecutingMessage, messages, executingMessageRemoving } = useChatStore()
+  
   const isExecuting = message.metadata?.isExecuting || message.content.includes('executing') || message.content.includes('Executing')
-  const isCompleting = message.metadata?.isCompleting
+  const isCompleting = message.metadata?.isCompleting || (isExecuting && executingMessageRemoving)
   const [isAnimating, setIsAnimating] = useState(false)
   const [slideUpAmount, setSlideUpAmount] = useState(0)
-  
-  const { markMessageAsCompleting, removeExecutingMessage, messages, executingMessageRemoving } = useChatStore()
 
   // Memoize expensive content checks to avoid recalculation on every render
   const contentChecks = useMemo(() => {
@@ -181,7 +192,11 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
                                 content.includes('Creating a step-by-step plan') ||
                                 content.includes('Analyzing task') ||
                                 content.includes('Creating plan'),
-      isTaskComplete: content.includes('🎉 Task Complete')
+      isTaskComplete: content.includes('## Task Completed') || 
+                     content.includes('Task Complete') || 
+                     content.includes('Task Completed') ||
+                     content.includes('Task completed successfully') ||
+                     content.includes('Task completed.')
     }
   }, [message.content])
 
@@ -230,14 +245,19 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
       case 'extract_tool':
       case 'screenshot_tool':
       case 'done_tool':
-      case 'result_tool':
       case 'todo_manager':
       case 'validator_tool':
+        return 'tool-result'
+      case 'result_tool':
+        // Check if this is a task summary message
+        if (message.content.includes('## Task Summary:') || message.content.includes('## Task Summary')) {
+          return 'task-summary'
+        }
         return 'tool-result'
       default:
         return 'markdown'
     }
-  }, [])
+  }, [message.content])
 
   // Memoize content renderer to avoid recalculation
   const contentRenderer = useMemo(() => {
@@ -367,14 +387,13 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
 
       case 'task-complete':
         return (
-          <div className="flex items-center gap-3 py-2 px-3 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30">
-              <span className="text-lg">🎉</span>
+          <div className="space-y-3">
+            <div className="py-2">
+              <div className="text-base font-semibold">Task Complete</div>
+              <div className="text-sm text-muted-foreground mt-1">The task has been completed successfully.</div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-green-800 dark:text-green-200">Task Complete</span>
-              <span className="text-sm text-green-600 dark:text-green-400">The task has been completed successfully.</span>
-            </div>
+            {/* Animated line below task completion messages */}
+            <div className="h-px bg-gradient-to-r from-brand/20 via-brand/30 to-brand/20 animate-draw-line" />
           </div>
         )
 
@@ -419,7 +438,6 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
       className={cn(
         'flex w-full group message-container',
         isUser ? 'justify-end' : 'justify-start',
-        isCompleting && 'animate-dash-off-left',
         // Add indentation for messages that should be indented
         shouldIndent && 'ml-8 relative',
         // Add special styling for TODO table messages
