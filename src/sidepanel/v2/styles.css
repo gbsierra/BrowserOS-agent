@@ -660,6 +660,28 @@ p, span, div, h1, h2, h3, h4, h5, h6, li, td, th, label, input, textarea, button
   animation: spin-slow 2s linear infinite;
 }
 
+/* Draw line animation (left to right) */
+@keyframes draw-line {
+  0% { 
+    width: 0;
+    opacity: 0;
+  }
+  50% { 
+    width: 50%;
+    opacity: 0.7;
+  }
+  100% { 
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+.animate-draw-line {
+  animation: draw-line 0.8s ease-out forwards;
+  width: 0;
+  overflow: hidden;
+}
+
 /* Glass morphism effect */
 .glass {
   background: rgba(255, 255, 255, 0.1);

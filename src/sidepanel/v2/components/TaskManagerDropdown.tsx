@@ -101,7 +101,7 @@ export function TaskManagerDropdown({ content, className }: TaskManagerDropdownP
         {/* Expand/Collapse button */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors ml-4"
           aria-label={isExpanded ? 'Collapse task list' : 'Expand task list'}
         >
           <span>{completedCount}/{tasks.length} completed</span>

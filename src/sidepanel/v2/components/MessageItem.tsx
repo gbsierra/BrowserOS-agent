@@ -12,6 +12,148 @@ interface MessageItemProps {
   shouldIndent?: boolean
 }
 
+// Helper function to detect and parse JSON content
+const parseJsonContent = (content: string) => {
+  try {
+    // Check if content looks like JSON (starts with [ or {)
+    if (content.trim().startsWith('[') || content.trim().startsWith('{')) {
+      const parsed = JSON.parse(content)
+      return parsed
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+// Helper function to check if JSON contains tab data (with windowId)
+const isTabData = (data: any): data is Array<{id: number, url: string, title: string, windowId: number}> => {
+  return Array.isArray(data) && 
+         data.length > 0 && 
+         data.every(item => 
+           typeof item === 'object' && 
+           typeof item.id === 'number' && 
+           typeof item.url === 'string' && 
+           typeof item.title === 'string' && 
+           typeof item.windowId === 'number'
+         )
+}
+
+// Helper function to check if JSON contains selected tab data (without windowId)
+const isSelectedTabData = (data: any): data is Array<{id: number, url: string, title: string}> => {
+  return Array.isArray(data) && 
+         data.length > 0 && 
+         data.every(item => 
+           typeof item === 'object' && 
+           typeof item.id === 'number' && 
+           typeof item.url === 'string' && 
+           typeof item.title === 'string'
+         )
+}
+
+// TabDataDisplay component for rendering tab information
+interface TabDataDisplayProps {
+  content: string
+}
+
+const TabDataDisplay = ({ content }: TabDataDisplayProps) => {
+  const tabData = parseJsonContent(content)
+  
+  if (!tabData || !isTabData(tabData)) {
+    return (
+      <div className="text-sm text-muted-foreground">
+        Invalid tab data format
+      </div>
+    )
+  }
+
+  // Group tabs by window
+  const tabsByWindow = tabData.reduce((acc, tab) => {
+    if (!acc[tab.windowId]) {
+      acc[tab.windowId] = []
+    }
+    acc[tab.windowId].push(tab)
+    return acc
+  }, {} as Record<number, typeof tabData>)
+
+  return (
+    <div className="space-y-4">
+      <div className="text-sm font-medium text-foreground mb-3">
+        Found {tabData.length} tab{tabData.length !== 1 ? 's' : ''} across {Object.keys(tabsByWindow).length} window{Object.keys(tabsByWindow).length !== 1 ? 's' : ''}
+      </div>
+      
+      {Object.entries(tabsByWindow).map(([windowId, tabs]) => (
+        <div key={windowId} className="bg-muted/30 rounded-lg p-3 border border-border/50">
+          <div className="space-y-2">
+            {tabs.map((tab) => (
+              <div 
+                key={tab.id} 
+                className="flex items-start gap-3 p-2 bg-background/50 rounded border border-border/30 hover:bg-background/70 transition-colors"
+              >
+                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-brand/60 mt-2"></div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-foreground truncate" title={tab.title}>
+                    {tab.title}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate" title={tab.url}>
+                    {tab.url}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// SelectedTabDataDisplay component for rendering selected tab information
+interface SelectedTabDataDisplayProps {
+  content: string
+}
+
+const SelectedTabDataDisplay = ({ content }: SelectedTabDataDisplayProps) => {
+  const tabData = parseJsonContent(content)
+  
+  if (!tabData || !isSelectedTabData(tabData)) {
+    return (
+      <div className="text-sm text-muted-foreground">
+        Invalid selected tab data format
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="text-sm font-medium text-foreground mb-3">
+        Selected {tabData.length} tab{tabData.length !== 1 ? 's' : ''}
+      </div>
+      
+      <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
+        <div className="space-y-2">
+          {tabData.map((tab) => (
+            <div 
+              key={tab.id} 
+              className="flex items-start gap-3 p-2 bg-background/50 rounded border border-border/30 hover:bg-background/70 transition-colors"
+            >
+              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-brand/60 mt-2"></div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-foreground truncate" title={tab.title}>
+                  {tab.title}
+                </div>
+                <div className="text-xs text-muted-foreground truncate" title={tab.url}>
+                  {tab.url}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /**
  * MessageItem component
  * Renders individual messages with role-based styling
@@ -77,12 +219,14 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
       case 'classification_tool':
       case 'planner_tool':
       case 'navigation_tool':
-      case 'tab_operations_tool':
-      case 'refresh_state_tool':
-      case 'find_element_tool':
-      case 'interaction_tool':
-      case 'scroll_tool':
-      case 'search_tool':
+      case 'tab_operations':
+      case 'refresh_browser_state':
+      case 'find_element':
+      case 'interact':
+      case 'scroll':
+      case 'search':
+      case 'group_tabs':
+      case 'get_selected_tabs':
       case 'extract_tool':
       case 'screenshot_tool':
       case 'done_tool':
@@ -122,6 +266,15 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
       return 'task-complete'
     }
 
+    // Check for JSON content (like tab data)
+    const jsonData = parseJsonContent(message.content)
+    if (jsonData && isTabData(jsonData)) {
+      return 'tab-data'
+    }
+    if (jsonData && isSelectedTabData(jsonData)) {
+      return 'selected-tab-data'
+    }
+
     // Tool-specific messages - check metadata
     if (message.metadata?.toolName) {
       return getToolContentRenderer(message.metadata.toolName)
@@ -134,7 +287,7 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
 
     // Plain text for system messages
     return 'plain-text'
-  }, [isUser, contentChecks, message.metadata?.toolName, message.role, getToolContentRenderer])
+  }, [isUser, contentChecks, message.content, message.metadata?.toolName, message.role, getToolContentRenderer])
 
   // Memoize whether to show bubble and timestamp
   const displayOptions = useMemo(() => {
@@ -206,6 +359,12 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
           content={message.content} 
         />
 
+      case 'tab-data':
+        return <TabDataDisplay content={message.content} />
+
+      case 'selected-tab-data':
+        return <SelectedTabDataDisplay content={message.content} />
+
       case 'task-complete':
         return (
           <div className="flex items-center gap-3 py-2 px-3 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800">
@@ -221,6 +380,18 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
 
       case 'task-summary':
       case 'task-failed':
+        return (
+          <div className="space-y-3">
+            <MarkdownContent
+              content={message.content}
+              className="break-words"
+              compact={false}
+            />
+            {/* Animated line below task summary/failed messages */}
+            <div className="h-px bg-gradient-to-r from-brand/20 via-brand/30 to-brand/20 animate-draw-line" />
+          </div>
+        )
+      
       case 'tool-result':
       case 'markdown':
         return (

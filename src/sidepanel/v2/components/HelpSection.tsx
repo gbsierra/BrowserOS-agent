@@ -80,7 +80,7 @@ export function HelpSection ({
              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand/20 to-brand/10 flex items-center justify-center">
                <MonitorIcon />
              </div>
-             <div>
+             <div className="flex items-center gap-2">
                <h2 className="text-lg font-semibold text-foreground">BrowserOS Agent</h2>
                {version && <span className="text-xs text-muted-foreground/70">v{version}</span>}
              </div>

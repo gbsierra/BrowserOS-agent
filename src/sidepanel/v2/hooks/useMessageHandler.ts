@@ -65,7 +65,7 @@ export function useMessageHandler() {
         const messageId = details.messageId || `stream-${Date.now()}`
         const message = {
           role: 'assistant' as const,
-          content: '...'  // Placeholder while streaming
+          content: ''  // Start with empty content
         }
         
         addMessage(message)

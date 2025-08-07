@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { MessageItem } from './MessageItem'
 import { Button } from '@/sidepanel/components/ui/button'
 import { useAutoScroll } from '../hooks/useAutoScroll'
@@ -69,7 +69,7 @@ const ALL_EXAMPLES = [
 ]
 
 // Animation constants
-const ANIMATION_INTERVAL = 3000 // 3 seconds between animations
+const ANIMATION_INTERVAL = 8000 // 8 seconds between animations
 const DISPLAY_COUNT = 5 // Show 5 examples at a time
 
 /**
@@ -83,9 +83,30 @@ export function MessageList({ messages, onScrollStateChange, scrollToBottom: ext
   const [currentExamples, setCurrentExamples] = useState<string[]>([])
   const [shuffledPool, setShuffledPool] = useState<string[]>([])
   const [isAnimating, setIsAnimating] = useState(false)
+  
+  // Track previously seen message IDs to determine which are new
+  const previousMessageIdsRef = useRef<Set<string>>(new Set())
+  const newMessageIdsRef = useRef<Set<string>>(new Set())
 
   // Use external container ref if provided, otherwise use internal one
   const containerRef = externalContainerRef || internalContainerRef
+
+  // Track new messages for animation
+  useEffect(() => {
+    const currentMessageIds = new Set(messages.map(msg => msg.id))
+    const previousIds = previousMessageIdsRef.current
+    
+    // Find new messages (in current but not in previous)
+    const newIds = new Set<string>()
+    currentMessageIds.forEach(id => {
+      if (!previousIds.has(id)) {
+        newIds.add(id)
+      }
+    })
+    
+    newMessageIdsRef.current = newIds
+    previousMessageIdsRef.current = currentMessageIds
+  }, [messages])
 
   // Memoize filtered and processed messages to avoid recalculation on every render
   const processedMessages = useMemo(() => {
@@ -164,16 +185,22 @@ export function MessageList({ messages, onScrollStateChange, scrollToBottom: ext
           return null
         }
         
+        // Only apply animation delay to new messages
+        const isNewMessage = newMessageIdsRef.current.has(message.id)
+        const animationDelay = isNewMessage ? index * 0.1 : 0
+        
         return {
           message,
           position: position!,
-          animationDelay: index * 0.1
+          animationDelay,
+          isNewMessage
         }
       })
       .filter(Boolean) as Array<{
         message: Message
         position: NonNullable<ReturnType<typeof messagePositions.get>>
         animationDelay: number
+        isNewMessage: boolean
       }>
   }, [messages])
 
@@ -251,7 +278,9 @@ export function MessageList({ messages, onScrollStateChange, scrollToBottom: ext
       const scrollDistance = container.scrollHeight - container.scrollTop - container.clientHeight
       const isNearBottom = scrollDistance < 100 // Increased threshold for better detection
       setIsAtBottom(isNearBottom)
-      onScrollStateChange?.(!isNearBottom) // Show button when NOT at bottom
+      
+      const shouldShowScrollButton = !isNearBottom && isUserScrolling
+      onScrollStateChange?.(shouldShowScrollButton)
     }
 
     // Check initially after a small delay to ensure container is rendered
@@ -266,7 +295,7 @@ export function MessageList({ messages, onScrollStateChange, scrollToBottom: ext
     return () => {
       container.removeEventListener('scroll', checkIfAtBottom)
     }
-  }, [containerRef, onScrollStateChange, messages.length]) // Added messages.length dependency
+  }, [containerRef, onScrollStateChange, messages.length, isUserScrolling]) // Added isUserScrolling dependency
 
   // Use external scroll function if provided, otherwise use internal one
   const handleScrollToBottom = () => {
@@ -290,6 +319,7 @@ export function MessageList({ messages, onScrollStateChange, scrollToBottom: ext
     return (
       <div 
         className="flex-1 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden mt-20"
+        style={{ paddingBottom: '120px' }}
         role="region"
         aria-label="Welcome screen with example prompts"
       >
@@ -407,11 +437,11 @@ export function MessageList({ messages, onScrollStateChange, scrollToBottom: ext
       >
         {/* Messages List */}
         <div className="p-6 space-y-3 pb-4">
-          {processedMessages.map(({ message, position, animationDelay }) => (
+          {processedMessages.map(({ message, position, animationDelay, isNewMessage }) => (
             <div 
               key={message.id}
-              className={`animate-fade-in-up`}
-              style={{ animationDelay: `${animationDelay}s` }}
+              className={`${isNewMessage ? 'animate-fade-in-up' : ''}`}
+              style={{ animationDelay: isNewMessage ? `${animationDelay}s` : undefined }}
               data-todo-position={position.isFirst ? 'first' : position.isLast ? 'last' : null}
               data-todo-index={position.todoIndex}
               data-between-todos={position.isBetweenTodos ? 'true' : 'false'}
