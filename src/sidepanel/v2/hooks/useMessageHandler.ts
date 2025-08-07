@@ -4,7 +4,7 @@ import { useSidePanelPortMessaging } from '@/sidepanel/hooks'
 import { useChatStore } from '../stores/chatStore'
 
 export function useMessageHandler() {
-  const { addMessage, updateMessage, setProcessing, setError, markMessageAsExecuting, markMessageAsCompleting, setExecutingMessageRemoving } = useChatStore()
+  const { addMessage, updateMessage, setProcessing, setError, markMessageAsExecuting, markMessageAsCompleting, setExecutingMessageRemoving, removeExecutingMessage } = useChatStore()
   const { addMessageListener, removeMessageListener } = useSidePanelPortMessaging()
   
   // Track streaming messages by ID for updates
@@ -28,6 +28,26 @@ export function useMessageHandler() {
         // Reset the flag after animation
         setTimeout(() => setExecutingMessageRemoving(false), 600)
       }
+    }
+
+    // Finalize any in-progress streamed assistant messages (e.g., on cancel)
+    const finalizeAndClearActiveStreams = () => {
+      streamingMessages.current.forEach((stream, key) => {
+        let finalContent: string = stream.content || ''
+        // Ensure code fences are closed to avoid markdown parse issues
+        const fenceCount = (finalContent.match(/```/g) || []).length
+        if (fenceCount % 2 === 1) {
+          finalContent += '\n```'
+        }
+        if (finalContent.trim().length === 0) {
+          // If empty partial, replace with a lightweight note to avoid empty markdown node
+          finalContent = '_Cancelled_'
+        } else {
+          finalContent += '\n\n_Cancelled_'
+        }
+        updateMessage(stream.messageId, finalContent)
+        streamingMessages.current.delete(key)
+      })
     }
     
     switch (details.messageType) {
@@ -266,6 +286,9 @@ export function useMessageHandler() {
         // Mark existing executing messages as completing
         markExecutingAsCompleting()
         
+        // Finalize any partial streamed assistant message to prevent broken markdown on next prompt
+        finalizeAndClearActiveStreams()
+
         // Task cancelled
         setProcessing(false)
         if (details.content) {

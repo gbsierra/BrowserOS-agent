@@ -314,8 +314,8 @@ export const MessageItem = memo(function MessageItem({ message, shouldIndent = f
       return 'markdown'
     }
 
-    // Plain text for system messages
-    return 'plain-text'
+    // Render markdown for non-user messages by default (system, etc.)
+    return 'markdown'
   }, [isUser, contentChecks, message.content, message.metadata?.toolName, message.role, getToolContentRenderer])
 
   // Memoize whether to show bubble and timestamp
