@@ -204,39 +204,16 @@ export function useMessageHandler() {
     }
   }, [addMessage, setProcessing, setError, markMessageAsCompleting, setExecutingMessageRemoving])
   
-  const handleSystemMessage = useCallback((payload: any) => {
-    if (payload.content) {
-      // Mark any executing messages as completing
-      const state = useChatStore.getState()
-      const executingMessages = state.messages.filter(msg => msg.metadata?.isExecuting && !msg.metadata?.isCompleting)
-      if (executingMessages.length > 0) {
-        setExecutingMessageRemoving(true)
-        executingMessages.forEach(msg => {
-          markMessageAsCompleting(msg.id)
-        })
-        // Reset the flag after animation
-        setTimeout(() => setExecutingMessageRemoving(false), 400)
-      }
-      
-      addMessage({
-        role: 'system',
-        content: payload.content
-      })
-    }
-  }, [addMessage, markMessageAsCompleting, setExecutingMessageRemoving])
-  
   useEffect(() => {
     // Register listeners
     addMessageListener(MessageType.AGENT_STREAM_UPDATE, handleStreamUpdate)
     addMessageListener(MessageType.WORKFLOW_STATUS, handleWorkflowStatus)
-    addMessageListener(MessageType.SYSTEM, handleSystemMessage)
     
     // Cleanup
     return () => {
       removeMessageListener(MessageType.AGENT_STREAM_UPDATE, handleStreamUpdate)
       removeMessageListener(MessageType.WORKFLOW_STATUS, handleWorkflowStatus)
-      removeMessageListener(MessageType.SYSTEM, handleSystemMessage)
       streamingMessages.current.clear()
     }
-  }, [addMessageListener, removeMessageListener, handleStreamUpdate, handleWorkflowStatus, handleSystemMessage])
+  }, [addMessageListener, removeMessageListener, handleStreamUpdate, handleWorkflowStatus])
 }
