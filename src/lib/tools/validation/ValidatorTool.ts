@@ -5,6 +5,7 @@ import { MessageManagerReadOnly } from '@/lib/runtime/MessageManager'
 import { generateValidatorSystemPrompt, generateValidatorTaskPrompt } from './ValidatorTool.prompt'
 import { toolError } from '@/lib/tools/Tool.interface'
 import { HumanMessage, SystemMessage } from '@langchain/core/messages'
+import { invokeWithRetry } from '@/lib/utils/retryable'
 
 // Input schema
 const ValidatorInputSchema = z.object({
@@ -35,6 +36,24 @@ export function createValidatorTool(executionContext: ExecutionContext): Dynamic
         // Get browser state
         const browserStateString = await executionContext.browserContext.getBrowserStateString()
         
+        // Get screenshot from the current page only if vision is enabled
+        let screenshot = ''
+        const config = executionContext.browserContext.getConfig()
+        if (config.useVision) {
+          try {
+            const currentPage = await executionContext.browserContext.getCurrentPage()
+            if (currentPage) {
+              const screenshotBase64 = await currentPage.takeScreenshot()
+              if (screenshotBase64) {
+                screenshot = `data:image/jpeg;base64,${screenshotBase64}`
+              }
+            }
+          } catch (error) {
+            // Log but don't fail if screenshot capture fails
+            console.warn('Failed to capture screenshot for validation:', error)
+          }
+        }
+        
         // Get message history for context
         const readOnlyMessageManager = new MessageManagerReadOnly(executionContext.messageManager)
         const messageHistory = readOnlyMessageManager.getAll()
@@ -46,15 +65,20 @@ export function createValidatorTool(executionContext: ExecutionContext): Dynamic
         const taskPrompt = generateValidatorTaskPrompt(
           args.task,
           browserStateString,
-          messageHistory
+          messageHistory,
+          screenshot
         )
         
-        // Get structured response from LLM
+        // Get structured response from LLM with retry logic
         const structuredLLM = llm.withStructuredOutput(ValidationResultSchema)
-        const validation = await structuredLLM.invoke([
-          new SystemMessage(systemPrompt),
-          new HumanMessage(taskPrompt)
-        ])
+        const validation = await invokeWithRetry<z.infer<typeof ValidationResultSchema>>(
+          structuredLLM,
+          [
+            new SystemMessage(systemPrompt),
+            new HumanMessage(taskPrompt)
+          ],
+          3
+        )
         
         // Return standard tool output with validation data as JSON string
         const validationData = {

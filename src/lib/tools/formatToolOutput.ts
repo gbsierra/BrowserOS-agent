@@ -114,8 +114,7 @@ export function formatToolOutput(toolName: string, result: ToolResult): string {
       return `Found ${output.matches.length} match${output.matches.length > 1 ? 'es' : ''} for "${query}"`;
     }
 
-    case 'refresh_browser_state':
-    case 'refresh_state_tool': {
+    case 'refresh_browser_state_tool': {
       // Output: Browser state snapshot (potentially large)
       return 'Browser state refreshed';
     }
@@ -166,7 +165,7 @@ export function formatToolOutput(toolName: string, result: ToolResult): string {
       }
     }
 
-    case 'todo_manager': {
+    case 'todo_manager_tool': {
       // Output: string (success message) or XML for list action
       if (typeof output === 'string') {
         return output;

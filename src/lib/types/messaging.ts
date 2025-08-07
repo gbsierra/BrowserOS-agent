@@ -24,7 +24,8 @@ export enum MessageType {
   INTENT_PREDICTION_UPDATED = 'INTENT_PREDICTION_UPDATED',
   INTENT_BUBBLES_SHOW = 'INTENT_BUBBLES_SHOW',
   INTENT_BUBBLE_CLICKED = 'INTENT_BUBBLE_CLICKED',
-  SYSTEM = 'SYSTEM'
+  GLOW_START = 'GLOW_START',
+  GLOW_STOP = 'GLOW_STOP'
 }
 
 // Create a zod enum for MessageType
@@ -307,19 +308,28 @@ export const IntentBubbleClickedMessageSchema = MessageSchema.extend({
 export type IntentBubbleClickedMessage = z.infer<typeof IntentBubbleClickedMessageSchema>
 
 /**
- * System message schema
+ * Glow start message schema
  */
-export const SystemMessageSchema = MessageSchema.extend({
-  type: z.literal(MessageType.SYSTEM),
+export const GlowStartMessageSchema = MessageSchema.extend({
+  type: z.literal(MessageType.GLOW_START),
   payload: z.object({
-    content: z.string(),  // System message content
-    level: z.enum(['info', 'warning', 'error', 'success']).optional().default('info'),  // Message level
-    source: z.string().optional(),  // Source of the system message
-    timestamp: z.string().optional()  // Optional timestamp
+    tabId: z.number()  // Tab ID to start glow on
   })
 })
 
-export type SystemMessage = z.infer<typeof SystemMessageSchema>
+export type GlowStartMessage = z.infer<typeof GlowStartMessageSchema>
+
+/**
+ * Glow stop message schema
+ */
+export const GlowStopMessageSchema = MessageSchema.extend({
+  type: z.literal(MessageType.GLOW_STOP),
+  payload: z.object({
+    tabId: z.number()  // Tab ID to stop glow on
+  })
+})
+
+export type GlowStopMessage = z.infer<typeof GlowStopMessageSchema>
 
 /**
  * Union of all message types
@@ -344,7 +354,8 @@ export const ExtensionMessageSchema = z.discriminatedUnion('type', [
   IntentPredictionUpdatedMessageSchema,
   IntentBubblesShowMessageSchema,
   IntentBubbleClickedMessageSchema,
-  SystemMessageSchema
+  GlowStartMessageSchema,
+  GlowStopMessageSchema
 ])
 
 export type ExtensionMessage = z.infer<typeof ExtensionMessageSchema>

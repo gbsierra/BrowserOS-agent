@@ -25,8 +25,8 @@ export class RefreshStateTool {
         return toolError("No active page to refresh state from")
       }
 
-      // Get fresh browser state
-      const browserState = await browserContext.getBrowserStateString()
+      // Get fresh browser state - use simplified mode for cleaner output
+      const browserState = await browserContext.getBrowserStateString(true)
 
       return toolSuccess(browserState)
     } catch (error) {
@@ -40,7 +40,7 @@ export function createRefreshStateTool(executionContext: ExecutionContext): Dyna
   const refreshStateTool = new RefreshStateTool(executionContext)
   
   return new DynamicStructuredTool({
-    name: "refresh_browser_state",
+    name: "refresh_browser_state_tool",
     description: refreshStateToolDescription,
     schema: RefreshStateInputSchema,
     func: async (args): Promise<string> => {
