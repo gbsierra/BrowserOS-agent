@@ -2,11 +2,14 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Textarea } from '@/sidepanel/components/ui/textarea'
 import { Button } from '@/sidepanel/components/ui/button'
 import { SelectTabsButton } from './SelectTabsButton'
+import { SelectTabsButton } from './SelectTabsButton'
 import { useChatStore } from '../stores/chatStore'
 import { useKeyboardShortcuts, useAutoResize } from '../hooks/useKeyboardShortcuts'
 import { useSidePanelPortMessaging } from '@/sidepanel/hooks'
 import { MessageType } from '@/lib/types/messaging'
 import { cn } from '@/sidepanel/lib/utils'
+import { CloseIcon, SendIcon, LoadingPawTrail } from './ui/Icons'
+
 import { CloseIcon, SendIcon, LoadingPawTrail } from './ui/Icons'
 
 
@@ -20,6 +23,7 @@ interface ChatInputProps {
 /**
  * Chat input component with auto-resize, tab selection, and keyboard shortcuts
  */
+export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
 export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
   const [input, setInput] = useState('')
   const [showTabSelector, setShowTabSelector] = useState(false)
@@ -54,6 +58,8 @@ export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
       window.removeEventListener('setInputValue', handleSetInput as EventListener)
     }
   }, [])
+  
+
   
 
   
@@ -102,6 +108,13 @@ export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
       return
     }
 
+    
+    // If processing and no input, act like pause button (cancel current task)
+    if (isProcessing && !input.trim()) {
+      handleCancel()
+      return
+    }
+
     if (isProcessing && input.trim()) {
       // Interrupt and follow-up pattern
       const followUpQuery = input.trim()
@@ -128,11 +141,25 @@ export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
       source: 'sidepanel'
     })
     // Do not change local processing state here; wait for background WORKFLOW_STATUS
+    // Do not change local processing state here; wait for background WORKFLOW_STATUS
   }
   
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
     setInput(newValue)
+    // Only show selector when user just typed '@' starting a new token
+    const lastChar: string = newValue.slice(-1)
+    if (lastChar === '@' && !showTabSelector) {
+      const beforeAt: string = newValue.slice(0, -1)
+      if (beforeAt === '' || /\s$/.test(beforeAt)) {
+        setShowTabSelector(true)
+      }
+      return
+    }
+    // Hide selector when input cleared
+    if (newValue === '' && showTabSelector) {
+      setShowTabSelector(false)
+    }
     setShowTabSelector(newValue.includes('@'))
   }
   
@@ -157,7 +184,7 @@ export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
   const getPlaceholder = () => {
     if (!isConnected) return 'Disconnected'
     if (isProcessing) return 'Interrupt with new task'
-    return 'Ask me anything'
+    return 'Ask me anything...'
   }
   
   const getHintText = () => {
@@ -174,13 +201,8 @@ export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
   }
   
   return (
-    <div className="relative bg-gradient-to-t from-background via-background to-background/95 p-2 flex-shrink-0 overflow-hidden">
+    <div className="relative bg-gradient-to-t from-background via-background to-background/95 px-2 py-1 flex-shrink-0 overflow-hidden">
       
-      {/* Spotlight effect from bottom of page */}
-      <div className="absolute top-20 left-0 w-full h-40">
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-40 bg-gradient-radial from-brand/30 via-brand/15 to-transparent animate-spotlight-pulse"></div>
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-64 h-32 bg-gradient-radial from-brand/25 via-brand/10 to-transparent animate-spotlight-pulse-delayed" style={{ animationDelay: '1.9s' }}></div>
-      </div>
       
       {/* Select Tabs Button (appears when '@' is present) */}
       
@@ -202,12 +224,12 @@ export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
         </div> */}
         
         {showTabSelector && (
-          <div className="px-4 mb-2">
+          <div className="px-2 mb-1">
             <SelectTabsButton />
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="w-full px-4" role="form" aria-label="Chat input form">
+        <form onSubmit={handleSubmit} className="w-full px-2" role="form" aria-label="Chat input form">
           <div className="relative flex items-end w-full transition-all duration-300 ease-out">
             <Textarea
               ref={textareaRef}
@@ -216,9 +238,10 @@ export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
               placeholder={getPlaceholder()}
               disabled={!isConnected}
               className={cn(
-                'max-h-[200px] resize-none pr-20 text-sm w-full',
+                'max-h-[200px] resize-none pr-16 text-sm w-full',
                 'bg-background/80 backdrop-blur-sm border-2 border-brand/30',
-                'focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:border-brand',
+                'focus-visible:outline-none focus-visible:border-brand/60',
+                'focus:outline-none focus:border-brand/60',
                 'hover:border-brand/50 hover:bg-background/90',
                 'rounded-2xl shadow-lg',
                 'px-3 py-2',
@@ -236,7 +259,7 @@ export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
               type="submit"
               disabled={!isConnected || (!input.trim() && !isProcessing)}
               size="sm"
-              className="absolute right-2 bottom-2 h-10 px-4 rounded-xl bg-gradient-to-r from-brand to-brand/80 hover:from-brand/90 hover:to-brand/70 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-brand focus:ring-offset-2"
+              className="absolute right-2 bottom-2 h-10 px-4 rounded-xl bg-gradient-to-r from-brand to-brand/80 hover:from-brand/90 hover:to-brand/70 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus-visible:outline-none"
               variant={isProcessing && !input.trim() ? 'destructive' : 'default'}
               aria-label={isProcessing && !input.trim() ? 'Cancel current task' : 'Send message'}
             >
@@ -251,7 +274,7 @@ export function ChatInput({ isConnected, isProcessing }: ChatInputProps) {
         
         <div 
           id="input-hint" 
-          className="mt-2 sm:mt-3 text-center text-xs text-muted-foreground font-medium flex items-center justify-center gap-2 px-2"
+          className="mt-1 sm:mt-2 text-center text-xs text-muted-foreground font-medium flex items-center justify-center gap-2 px-2"
           role="status"
           aria-live="polite"
         >
