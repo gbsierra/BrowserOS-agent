@@ -9,6 +9,7 @@ import { useChatStore } from '../stores/chatStore'
 import { DogHeadSpinner } from './ui/DogHeadSpinner'
 // import { ChevronDownIcon, ChevronUpIcon } from './ui/Icons'
 import { TaskManagerDropdown } from './TaskManagerDropdown'
+import { LackOfContextDropdown } from './shared/LackOfContextDropdown'
 import { useSettingsStore } from '@/sidepanel/v2/stores/settingsStore'
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist'
 
@@ -688,14 +689,24 @@ export const MessageItem = memo<MessageItemProps>(function MessageItem({ message
         const prefixRegex = new RegExp(`^(${rawName}|${baseName})\\s*-\\s*`, 'i')
         const cleanContent = content.replace(prefixRegex, '')
         
-        // Use the same collapsible style both inside and outside the orange section
+        // Custom rendering for lack_of_context_tool: group JSON and the following system message under brand-styled dropdown
+        if (rawName === 'lack_of_context_tool') {
+          // The JSON is already in cleanContent and the system message appears as a separate message.
+          // We don't have direct access to the following message here; render only the JSON block.
+          // The system message will render right below as normal, visually grouped by adjacency.
           return (
-            <ToolResultInline
-              name={rawName}
-              content={cleanContent}
-              autoCollapseAfterMs={autoCollapseDelayMs}
-            />
+            <LackOfContextDropdown jsonContent={cleanContent} />
           )
+        }
+
+        // Use the same collapsible style for other tools
+        return (
+          <ToolResultInline
+            name={rawName}
+            content={cleanContent}
+            autoCollapseAfterMs={autoCollapseDelayMs}
+          />
+        )
       }
       case 'markdown':
         return (

@@ -146,6 +146,26 @@ export class EventProcessor {
     this.eventBus.emitTaskResult(success, message, 'BrowserAgent');
   }
 
+  /**
+   * Emit a pause gate event to UI
+   */
+  pause(data: {
+    gateId: string
+    reason: string
+    message: string
+    requiredInfo?: string[]
+    suggestedPrompts?: string[]
+    tags?: string[]
+  }): void {
+    this.eventBus.emitStreamEvent({
+      type: 'debug.message',
+      source: 'BrowserAgent',
+      data: { message: `Paused: ${data.reason}`, data }
+    })
+    // Note: UI currently listens to categorized system messages.
+    // If we later add a dedicated 'system.pause' type, update EventBus and UI handlers accordingly.
+  }
+
   // Private helper methods
   private _generateMessageId(): string {
     return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;

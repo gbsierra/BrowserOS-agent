@@ -9,7 +9,7 @@ import { useSidePanelPortMessaging } from '@/sidepanel/hooks/useSidePanelPortMes
 import { MessageType } from '@/lib/types/messaging'
 
 const DISCORD_URL = 'https://discord.com/invite/YKwjt5vuKr'
-const AUTO_COLLAPSE_DEFAULT_SECS = 10  // Default seconds when enabling
+const AUTO_COLLAPSE_DEFAULT_SECS = 20  // Default seconds when enabling
 
 // Define the props schema with Zod
 const SettingsModalPropsSchema = z.object({
@@ -257,9 +257,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     'task_manager_tool', 'todo_manager_tool', 'navigation_tool', 'tab_operations_tool',
                     'find_element_tool', 'interact_tool', 'scroll_tool', 'search_tool',
                     'group_tabs_tool', 'get_selected_tabs_tool', 'extract_tool', 'screenshot_tool',
-                    'validator_tool', 'done_tool', 'result_tool'
+                    'validator_tool', 'lack_of_context_tool', 'done_tool', 'result_tool'
                   ].map(key => {
-                    const checked = autoCollapseKeys.length === 0 ? true : autoCollapseKeys.includes(key)
+                    // Default: when no explicit selection, treat all as checked EXCEPT lack_of_context_tool
+                    const checked = autoCollapseKeys.length === 0
+                      ? (key !== 'lack_of_context_tool')
+                      : autoCollapseKeys.includes(key)
                     return (
                       <label key={key} className="flex items-center gap-2 text-xs">
                         <input
@@ -267,7 +270,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                           className="accent-[hsl(var(--brand))]"
                           checked={checked}
                           onChange={(e) => {
-                            const all = ['task_manager_tool','todo_manager_tool','navigation_tool','tab_operations_tool','find_element_tool','interact_tool','scroll_tool','search_tool','group_tabs_tool','get_selected_tabs_tool','extract_tool','screenshot_tool','validator_tool','done_tool','result_tool']
+                              const all = ['task_manager_tool','todo_manager_tool','navigation_tool','tab_operations_tool','find_element_tool','interact_tool','scroll_tool','search_tool','group_tabs_tool','get_selected_tabs_tool','extract_tool','screenshot_tool','validator_tool','lack_of_context_tool','done_tool','result_tool']
                             if (autoCollapseKeys.length === 0) {
                               const next = e.target.checked ? all : all.filter(k => k !== key)
                               setAutoCollapseKeys(next)
@@ -290,7 +293,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     variant="ghost"
                     size="sm"
                     className="h-7 px-2 text-xs"
-                    onClick={() => setAutoCollapseKeys(['task_manager_tool','todo_manager_tool','navigation_tool','tab_operations_tool','find_element_tool','interact_tool','scroll_tool','search_tool','group_tabs_tool','get_selected_tabs_tool','extract_tool','screenshot_tool','validator_tool','done_tool','result_tool'])}
+                    onClick={() => setAutoCollapseKeys(['task_manager_tool','todo_manager_tool','navigation_tool','tab_operations_tool','find_element_tool','interact_tool','scroll_tool','search_tool','group_tabs_tool','get_selected_tabs_tool','extract_tool','screenshot_tool','validator_tool','lack_of_context_tool','done_tool','result_tool'])}
                   >
                     Apply to all
                   </Button>

@@ -57,6 +57,7 @@ import { createGroupTabsTool } from '@/lib/tools/tab/GroupTabsTool';
 import { createGetSelectedTabsTool } from '@/lib/tools/tab/GetSelectedTabsTool';
 import { createClassificationTool } from '@/lib/tools/classification/ClassificationTool';
 import { createValidatorTool } from '@/lib/tools/validation/ValidatorTool';
+import { createLackOfContextTool } from '@/lib/tools/validation/LackOfContextTool';
 // Validation detection tools temporarily disabled per refactor plan
 // import { createLackOfContextTool } from '@/lib/tools/validation/LackOfContextTool';
 // import { createInstructionEchoTool } from '@/lib/tools/validation/InstructionEchoTool';
@@ -115,6 +116,7 @@ export class BrowserAgent {
   private readonly executionContext: ExecutionContext;
   private readonly toolManager: ToolManager;
   private readonly glowService: GlowAnimationService;
+  private _resumePendingAction: boolean = false;  // When true, suppress LOC pauses until one action attempt
 
   constructor(executionContext: ExecutionContext) {
     this.executionContext = executionContext;
@@ -149,10 +151,39 @@ export class BrowserAgent {
   async execute(task: string): Promise<void> {
     try {
       // 1. SETUP: Initialize system prompt and user task
-      this._initializeExecution(task);
+      // If resuming right after a pause gate, skip emitting startup system messages
+      const isResume = this.executionContext.consumeResumeAfterPauseFlag()
+      if (!isResume) {
+        this._initializeExecution(task);
+      } else {
+        // Ensure system prompt exists for tool bindings even if we skip startup messaging
+        if (!this.messageManager.getMessages().some(m => m._getType() === 'system')) {
+          const systemPrompt = generateSystemPrompt(this.toolManager.getDescriptions())
+          this.messageManager.addSystem(systemPrompt)
+        }
+        // Also ensure the latest human message reflects the resumed input
+        this.messageManager.addHuman(task)
+        // Activate resume guard: require at least one action attempt before allowing LOC pause
+        this._resumePendingAction = true
+        // Extract any explicit email from the last user message and add a precise reminder
+        try {
+          const msgs = this.messageManager.getMessages()
+          for (let i = msgs.length - 1; i >= 0; i--) {
+            const m = msgs[i]
+            if ((m as any)._getType && (m as any)._getType() === 'human') {
+              const content = typeof m.content === 'string' ? m.content : ''
+              const match = content.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/)
+              if (match) {
+                this.messageManager.addSystemReminder(`Use this email exactly as provided by the user: ${match[0]}`)
+              }
+              break
+            }
+          }
+        } catch (_e) { /* ignore */ }
+      }
 
-      // 2. CLASSIFY: Determine the task type
-      const classification = await this._classifyTask(task);
+      // 2. CLASSIFY: Determine the task type (skip startup info messages on resume)
+      const classification = await this._classifyTask(task, isResume);
       
       // Clear message history if this is not a follow-up task
       if (!classification.is_followup_task) {
@@ -161,16 +192,18 @@ export class BrowserAgent {
         this._initializeExecution(task);
       }
       
-      let message: string;
-      if (classification.is_followup_task) {
-        message = 'Following up on the previous task...';
-      } else if (classification.is_simple_task) {
-        message = 'Executing the task...';
-      } else {
-        message = 'Creating a step-by-step plan to complete the task';
+      if (!isResume) {
+        let message: string;
+        if (classification.is_followup_task) {
+          message = 'Following up on the previous task...';
+        } else if (classification.is_simple_task) {
+          message = 'Executing the task...';
+        } else {
+          message = 'Creating a step-by-step plan to complete the task';
+        }
+        // Tag startup status messages for UI styling
+        this.eventEmitter.info(message, 'startup');
       }
-      // Tag startup status messages for UI styling
-      this.eventEmitter.info(message, 'startup');
 
       // 3. DELEGATE: Route to the correct execution strategy
       if (!classification.is_followup_task) {
@@ -182,9 +215,14 @@ export class BrowserAgent {
         }
       }
       if (classification.is_simple_task) {
-        await this._executeSimpleTaskStrategy(task);
+        // On resume, simple-task ceilings can be too tight; route to multi-step for robustness
+        if (isResume) {
+          await this._executeMultiStepStrategy(task, /*quiet=*/true)
+        } else {
+          await this._executeSimpleTaskStrategy(task);
+        }
       } else {
-        await this._executeMultiStepStrategy(task);
+        await this._executeMultiStepStrategy(task, /*quiet=*/isResume);
       }
 
       // 4. FINALISE: Generate final result
@@ -249,8 +287,8 @@ export class BrowserAgent {
     
     // Validation tool
     this.toolManager.register(createValidatorTool(this.executionContext));
-    // Detection tools disabled (will be reintroduced after refactor without heuristics)
-    // this.toolManager.register(createLackOfContextTool(this.executionContext));
+    // Lack of Context tool (generic pause gate)
+    this.toolManager.register(createLackOfContextTool(this.executionContext));
     // this.toolManager.register(createInstructionEchoTool(this.executionContext));
 
     // util tools
@@ -265,8 +303,10 @@ export class BrowserAgent {
     this.toolManager.register(createClassificationTool(this.executionContext, toolDescriptions));
   }
 
-  private async _classifyTask(task: string): Promise<ClassificationResult> {
-    this.eventEmitter.info('Analyzing task complexity...');
+  private async _classifyTask(task: string, quiet: boolean = false): Promise<ClassificationResult> {
+    if (!quiet) {
+      this.eventEmitter.info('Analyzing task complexity...');
+    }
     
     const classificationTool = this.toolManager.get('classification_tool');
     if (!classificationTool) {
@@ -277,23 +317,27 @@ export class BrowserAgent {
     const args = { task };
     
     try {
-      this.eventEmitter.toolStart('classification_tool', args);
+      if (!quiet) this.eventEmitter.toolStart('classification_tool', args);
       const result = await classificationTool.func(args);
       const parsedResult = JSON.parse(result);
       
       if (parsedResult.ok) {
         const classification = JSON.parse(parsedResult.output);
-        const classification_formatted_output = formatToolOutput('classification_tool', parsedResult);
-        this.eventEmitter.toolEnd('classification_tool', true, classification_formatted_output);
+        if (!quiet) {
+          const classification_formatted_output = formatToolOutput('classification_tool', parsedResult);
+          this.eventEmitter.toolEnd('classification_tool', true, classification_formatted_output);
+        }
         return { 
           is_simple_task: classification.is_simple_task,
           is_followup_task: classification.is_followup_task 
         };
       }
     } catch (error) {
-      const errorResult = { ok: false, error: 'Classification failed' };
-      const error_formatted_output = formatToolOutput('classification_tool', errorResult);
-      this.eventEmitter.toolEnd('classification_tool', false, error_formatted_output);
+      if (!quiet) {
+        const errorResult = { ok: false, error: 'Classification failed' };
+        const error_formatted_output = formatToolOutput('classification_tool', errorResult);
+        this.eventEmitter.toolEnd('classification_tool', false, error_formatted_output);
+      }
     }
     
     // Default to complex task on any failure
@@ -325,7 +369,7 @@ export class BrowserAgent {
   // ===================================================================
   //  Execution Strategy 2: Multi-Step Tasks (Plan -> Execute -> Repeat)
   // ===================================================================
-  private async _executeMultiStepStrategy(task: string): Promise<void> {
+  private async _executeMultiStepStrategy(task: string, quiet: boolean = false): Promise<void> {
     this.eventEmitter.debug('Executing as a complex multi-step task');
     let outer_loop_index = 0;
     let lastAssistantText: string | null = null
@@ -335,7 +379,7 @@ export class BrowserAgent {
       this.checkIfAborted();
 
       // 1. PLAN: Create a new plan
-      const plan = await this._createMultiStepPlan(task);
+      const plan = await this._createMultiStepPlan(task, quiet);
       if (plan.steps.length === 0) {
         throw new Error('Planning failed: no steps were generated');
       }
@@ -538,6 +582,32 @@ export class BrowserAgent {
         this.messageManager.addTool(result, toolCallId);
       }
 
+      // Special handling for generic pause gate
+      if (toolName === 'lack_of_context_tool' && parsedResult?.ok && parsedResult?.output?.pause === true) {
+        // If resuming and we haven't attempted an action yet, suppress a single LOC pause
+        if (this._resumePendingAction) {
+          this._resumePendingAction = false
+          // Add a quiet system reminder to encourage proceeding without pausing again immediately
+          this.messageManager.addSystemReminder('Proceeding with provided input. Avoid pausing again until one action is attempted.')
+          continue
+        }
+        const out = parsedResult.output
+        const gateId = `gate_${Date.now()}_${Math.random().toString(36).slice(2)}`
+        this.eventEmitter.pause({
+          gateId,
+          reason: typeof out.reason === 'string' ? out.reason : 'blocked',
+          message: typeof out.message === 'string' ? out.message : 'Additional input is required to proceed.',
+          requiredInfo: Array.isArray(out.requiredInfo) ? out.requiredInfo : undefined,
+          suggestedPrompts: Array.isArray(out.suggestedPrompts) ? out.suggestedPrompts : undefined,
+          tags: Array.isArray(out.tags) ? out.tags : undefined
+        })
+        // Mark that the next run should resume silently and reset abort controller
+        this.executionContext.markResumeAfterPause()
+        // Halt execution loop without marking as fatal; this will be treated as a pause
+        this.executionContext.cancelExecution(false)
+        throw new AbortError('Paused awaiting user input')
+      }
+
       // Special handling for todo_manager_tool, add system reminder for mutations
       if (toolName === 'todo_manager_tool' && parsedResult.ok && args.action !== 'list') {
         const todoStore = this.executionContext.todoStore;
@@ -557,20 +627,22 @@ export class BrowserAgent {
     return wasDoneToolCalled;
   }
 
-  private async _createMultiStepPlan(task: string): Promise<Plan> {
+  private async _createMultiStepPlan(task: string, quiet: boolean = false): Promise<Plan> {
     const plannerTool = this.toolManager.get('planner_tool')!;
     const args = {
       task: `Based on the history, continue with the main goal: ${task}`,
       max_steps: BrowserAgent.MAX_STEPS_FOR_COMPLEX_TASKS
     };
 
-    this.eventEmitter.toolStart('planner_tool', args);
+    if (!quiet) this.eventEmitter.toolStart('planner_tool', args);
     const result = await plannerTool.func(args);
     const parsedResult = JSON.parse(result);
     
     // Format the planner output
-    const planner_formatted_output = formatToolOutput('planner_tool', parsedResult);
-    this.eventEmitter.toolEnd('planner_tool', parsedResult.ok, planner_formatted_output);
+    if (!quiet) {
+      const planner_formatted_output = formatToolOutput('planner_tool', parsedResult);
+      this.eventEmitter.toolEnd('planner_tool', parsedResult.ok, planner_formatted_output);
+    }
 
     if (parsedResult.ok && parsedResult.output?.steps && Array.isArray(parsedResult.output.steps)) {
       return { steps: parsedResult.output.steps };

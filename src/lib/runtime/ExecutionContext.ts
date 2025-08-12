@@ -38,6 +38,7 @@ export class ExecutionContext {
   private _currentTask: string | null = null  // Current user task being executed
   private _failedUrls: Set<string> = new Set()  // URLs that failed during this execution
   private _pageSelectionHistory: Map<string, Map<string, Set<number>>> = new Map()  // pageUrl -> description -> tried nodeIds
+  private _shouldResumeAfterPause: boolean = false  // Consume-once resume flag
 
   constructor(options: ExecutionContextOptions) {
     // Validate options at runtime
@@ -168,6 +169,7 @@ export class ExecutionContext {
     this.todoStore.reset();
     this._failedUrls.clear();
     this._pageSelectionHistory.clear();
+    this._shouldResumeAfterPause = false;
   }
 
   /**
@@ -235,6 +237,17 @@ export class ExecutionContext {
     if (!byDesc) return new Set<number>()
     const ids = byDesc.get(descKey)
     return ids ? new Set<number>(ids) : new Set<number>()
+  }
+
+  // ===== Pause/Resume gating helpers =====
+  public markResumeAfterPause (): void {
+    this._shouldResumeAfterPause = true
+  }
+
+  public consumeResumeAfterPauseFlag (): boolean {
+    const wasSet = this._shouldResumeAfterPause
+    this._shouldResumeAfterPause = false
+    return wasSet
   }
 }
  

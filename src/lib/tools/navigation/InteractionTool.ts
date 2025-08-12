@@ -376,7 +376,7 @@ Operations:
 
 Examples:
 - Click button: { operationType: "click", description: "Submit button" }
-- Fill input: { operationType: "input_text", description: "email field", input_text: "user@example.com" }
+- Fill input: { operationType: "input_text", description: "email field", input_text: "<value from user>" }
 - Clear field: { operationType: "clear", description: "search box" }
 - Press key: { operationType: "send_keys", keys: "Enter" }
 

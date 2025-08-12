@@ -35,7 +35,14 @@ export function InlineDropdown ({
   // Auto-collapse support (honors settingsStore.autoCollapseTools)
   useEffect(() => {
     const delay = typeof autoCollapseAfterMs === 'number' ? autoCollapseAfterMs : autoCollapseDelayMs
-    const allowByKey = !collapseKey || autoCollapseKeys.length === 0 || autoCollapseKeys.includes(collapseKey)
+    // When no specific keys are selected (global default), treat lack_of_context_tool as excluded by default
+    const allowByKey = (() => {
+      if (!collapseKey) return true
+      if (autoCollapseKeys.length === 0) {
+        return collapseKey !== 'lack_of_context_tool'
+      }
+      return autoCollapseKeys.includes(collapseKey)
+    })()
     if (!delay || delay <= 0 || !allowByKey) return
     let timer: ReturnType<typeof setTimeout> | null = null
     setExpanded(true)

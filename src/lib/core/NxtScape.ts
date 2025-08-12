@@ -186,8 +186,18 @@ export class NxtScape {
       this._internalCancel();
     }
 
-    // Reset abort controller if it's aborted (from pause or previous execution)
+    // Determine follow-up status based on existing conversation history
+    const isFollowUp = this.messageManager.getMessages().length > 0;
+
+    // Ensure abort controller is usable for a new run
+    // If we previously paused (system-initiated cancel), the signal may remain aborted
     if (this.executionContext.abortController.signal.aborted) {
+      this.executionContext.resetAbortController();
+    }
+
+    // Only reset abort controller for new conversations or after user cancellation
+    // Note: already reset above when signal is aborted (e.g., after pause)
+    if (!isFollowUp || this.executionContext.isUserCancellation()) {
       this.executionContext.resetAbortController();
     }
 

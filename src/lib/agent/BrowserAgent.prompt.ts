@@ -91,9 +91,11 @@ ${toolDescriptions}
 2. Correct the problematic fields
 3. Try submitting again
 
-**Access Denied / Login Required:**
-1. Recognize login page indicators
-2. done_tool({ text: "Task requires login. Please sign in and retry." })
+**Access Denied / Login Required or Any Blocking Condition:**
+1. If you are blocked, uncertain, lack required context, the instructions are ambiguous, a login/paywall is required, or continuing would be unsafe/not meaningful:
+2. Call lack_of_context_tool with a concise user-facing message and list any specific information needed
+3. Do not proceed until the user responds with the requested input
+4. Never fabricate credentials. Only use values the user explicitly provided in chat. If any credential (email/username/password) is missing, pause once to ask; otherwise use exactly what the user provided.
 
 ### Recovery Principles
 - Only refresh state after errors if the page might have changed
